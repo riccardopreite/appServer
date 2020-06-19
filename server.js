@@ -183,6 +183,7 @@ app.get('/getPoiFromFriend', async (req, res) => {
  carIntervalExpired[key] = exp
   });
 
+//call to remove interval of auto if canceled
   app.get('/resetTimerAuto', async (req, res) => {
     var timer = req.query.timer
     var owner = req.query.owner
@@ -265,6 +266,16 @@ app.get('/startLive', async (req, res) => {
         });
      });
      })
+     var exp = setInterval(function() {
+       db.collection('user').doc(owner).collection("timedLiveExpired").add({
+         key: mylive
+       }).then(ref => {
+         console.log('Added timer finito live ', mycar);
+       // res.send(2)//sent friend request
+      });
+      clearInterval(exp)
+    },timer*60*1000)
+     //add interval to delete the event
 });
 
 
