@@ -267,13 +267,26 @@ app.get('/startLive', async (req, res) => {
      });
      })
      var exp = setInterval(function() {
-       db.collection('user').doc(owner).collection("timedLiveExpired").add({
-         key: mylive
-       }).then(ref => {
-         console.log('Added timer finito live ', mycar);
-       // res.send(2)//sent friend request
-      });
-      clearInterval(exp)
+
+
+       db.collection('user').doc(owner).collection("friend")
+       .get()
+       .then(snapshot => {
+         snapshot.forEach(doc => {
+           var tmp = doc.data()
+           var friend = tmp["friend"]
+           var supKey = key+friend
+           console.log(supKey);
+           console.log("IN");
+           db.collection('user').doc(owner).collection("timedLiveExpired").add({
+             key: mylive
+           }).then(ref => {
+             console.log('Added timer finito live ', mycar);
+           // res.send(2)//sent friend request
+          });
+        });
+        clearInterval(exp)
+      })
     },timer*60*1000)
      //add interval to delete the event
 });
