@@ -39,7 +39,6 @@ app.get('/addFriend', (req, res) => {
            var friend = doc.data()
               if(friend.friend == sender) {
                 notfriend = false
-                break
                 console.log("already friend");
               }
          });
@@ -63,37 +62,38 @@ app.get('/confirmFriend', (req, res) => {
  var sender = req.query.sender.replace("@gmail.com","")
  var notfriend = true
  console.log("receiver "+receiver+"\nsender "+sender);
- db.collection('user').doc(receiver).collection("friend").get().then(documentSnapshot => {
+ db.collection('user').doc(receiver).get().then(documentSnapshot => {
    if (documentSnapshot.exists) {
-     documentSnapshot.forEach(doc => {
-       var friend = doc.data()
-          if(friend.friend == sender){
-           console.log("already friend");
-           notfriend = false
-           break
-        }
-     });
-     if(notfriend){
-       db.collection('user').doc(receiver).collection("friend").add({
-          friend:sender
-       }).then(ref => {
-         console.log('Added friend with ID: ', ref.id);
-       });
-      db.collection('user').doc(sender).get().then(documentSnapshot => {
-       if (documentSnapshot.exists) {
-         db.collection('user').doc(sender).collection("friend").add({
-            friend:receiver
+       db.collection('user').doc(receiver).collection("friend").get().then(friendSnapshot => {
+         friendSnapshot.forEach(doc => {
+           var friend = doc.data()
+              if(friend.friend == sender){
+               console.log("already friend");
+               notfriend = false
+            }
+         });
+       if(notfriend){
+         db.collection('user').doc(receiver).collection("friend").add({
+            friend:sender
          }).then(ref => {
            console.log('Added friend with ID: ', ref.id);
          });
-         db.collection('user').doc(sender).collection("addedfriend").add({
-            friend:receiver
-         }).then(ref => {
-           console.log('Added friend with ID: ', ref.id);
-         });
-       }
-      });
-    }
+        db.collection('user').doc(sender).get().then(documentSnapshot => {
+         if (documentSnapshot.exists) {
+           db.collection('user').doc(sender).collection("friend").add({
+              friend:receiver
+           }).then(ref => {
+             console.log('Added friend with ID: ', ref.id);
+           });
+           db.collection('user').doc(sender).collection("addedfriend").add({
+              friend:receiver
+           }).then(ref => {
+             console.log('Added friend with ID: ', ref.id);
+           });
+         }
+        });
+      }
+    })
    }
  });
 
@@ -304,3 +304,4 @@ app.get('/startLive', async (req, res) => {
 server.listen(3000,()=>{
  console.log('Node app is running on port 3000')
 });
+
