@@ -26,6 +26,7 @@ app.get('/addFriend', (req, res) => {
 
  var user = req.query.username.replace("@gmail.com","")
  var sender = req.query.sender.replace("@gmail.com","")
+ var notfriend = true
  console.log("user "+user+"\nsender "+sender);
  db.collection('user').doc(user).get().then(documentSnapshot => {
 
@@ -33,20 +34,24 @@ app.get('/addFriend', (req, res) => {
        db.collection('user').doc(user).collection("friend").get().then(friendSnapshot => {
          //check if already friends
          console.log("FRIEND DATA");
+         try{
          friendSnapshot.forEach(doc => {
            var friend = doc.data()
               if(friend.friend == sender) {
+                notfriend = false
+                break
                 console.log("already friend");
-                res.sendStatus(1) //already friend
               }
          });
-	//check if already sent friends request
-     	db.collection('user').doc(user).collection("friendrequest").add({
-     		origin: sender
-   	}).then(ref => {
-    		 console.log('Added friendrequest with ID: ', ref.id);
-     // res.send(2)//sent friend request
-   	});
+       }
+       catch(e){}
+         if(notfriend){
+           db.collection('user').doc(user).collection("friendrequest").add({
+          		origin: sender
+        	  }).then(ref => {
+         		 console.log('Added friendrequest with ID: ', ref.id);
+        	});
+         }
      })
    }
  });
@@ -56,6 +61,7 @@ app.get('/confirmFriend', (req, res) => {
 
  var receiver = req.query.receiver.replace("@gmail.com","")
  var sender = req.query.sender.replace("@gmail.com","")
+ var notfriend = true
  console.log("receiver "+receiver+"\nsender "+sender);
  db.collection('user').doc(receiver).collection("friend").get().then(documentSnapshot => {
    if (documentSnapshot.exists) {
@@ -63,33 +69,34 @@ app.get('/confirmFriend', (req, res) => {
        var friend = doc.data()
           if(friend.friend == sender){
            console.log("already friend");
-           res.sendStatus(1) //already friend
+           notfriend = false
+           break
         }
      });
-
-     db.collection('user').doc(receiver).collection("friend").add({
-        friend:sender
-     }).then(ref => {
-       console.log('Added friend with ID: ', ref.id);
-     });
-    db.collection('user').doc(sender).get().then(documentSnapshot => {
-
-   if (documentSnapshot.exists) {
-     db.collection('user').doc(sender).collection("friend").add({
-        friend:receiver
-     }).then(ref => {
-       console.log('Added friend with ID: ', ref.id);
-     });
-     db.collection('user').doc(sender).collection("addedfriend").add({
-        friend:receiver
-     }).then(ref => {
-       console.log('Added friend with ID: ', ref.id);
-     });
+     if(notfriend){
+       db.collection('user').doc(receiver).collection("friend").add({
+          friend:sender
+       }).then(ref => {
+         console.log('Added friend with ID: ', ref.id);
+       });
+      db.collection('user').doc(sender).get().then(documentSnapshot => {
+       if (documentSnapshot.exists) {
+         db.collection('user').doc(sender).collection("friend").add({
+            friend:receiver
+         }).then(ref => {
+           console.log('Added friend with ID: ', ref.id);
+         });
+         db.collection('user').doc(sender).collection("addedfriend").add({
+            friend:receiver
+         }).then(ref => {
+           console.log('Added friend with ID: ', ref.id);
+         });
+       }
+      });
+    }
    }
  });
-   }
- });
- 
+
 });
 
 app.get('/removeFriend', (req, res) => {
@@ -103,7 +110,6 @@ app.get('/removeFriend', (req, res) => {
        console.log("deliting FRIEND");
        friendSnapshot.forEach(doc => {
          var friend = doc.data()
-         // var friend = doc.data
            if(friend.friend == sender) {
                db.collection('user').doc(receiver).collection("friend").doc(doc.id).delete();
                //res.send(1)//already friend
@@ -242,18 +248,6 @@ app.get('/startLive', async (req, res) => {
   mylive["addr"] = address
   console.log(mylive);
   console.log(owner);
-  //see friend list and add the json for every friend to live collection and for every one start interval to delete
-  // db.collection('user').doc(owner).collection("friend")
-  // .get()
-  // .then(snapshot => {
-  //   console.log(snapshot.data());
-  //   snapshot.forEach(item => {
-  //
-  //     console.log("PERLAMADONNA");
-  //     console.log(item)
-  //     console.log(item.data())
-  //     console.log("FINE");
-  //   });
     db.collection('user').doc(owner).collection("friend")
     .get()
     .then(snapshot => {
@@ -310,4 +304,3 @@ app.get('/startLive', async (req, res) => {
 server.listen(3000,()=>{
  console.log('Node app is running on port 3000')
 });
-
