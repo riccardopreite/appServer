@@ -35,32 +35,19 @@ app.get('/addFriend', (req, res) => {
          console.log("FRIEND DATA");
          friendSnapshot.forEach(doc => {
            var friend = doc.data()
-           friend.forEach(chi => {
-             console.log(chi);
-              if(friend.friend == sender) console.log("already friend");
-              res.send(1) //already friend
-           })
+              if(friend.friend == sender) {
+                console.log("already friend");
+                res.sendStatus(1) //already friend
+              }
          });
-       })
-       db.collection('user').doc(user).collection("friend").get().then(friendSnapshot => {
-         //check if already friends
-         console.log("FRIEND DATA");
-         friendSnapshot.forEach(doc => {
-           var friend = doc.data()
-           friend.forEach(chi => {
-             console.log(chi);
-              if(friend.friend == sender) console.log("already friend");
-              res.send(1) //already friend
-           })
-         });
-       })
-       //check if already sent friends request
-     db.collection('user').doc(user).collection("friendrequest").add({
-     origin: sender
-   }).then(ref => {
-     console.log('Added friendrequest with ID: ', ref.id);
+	//check if already sent friends request
+     	db.collection('user').doc(user).collection("friendrequest").add({
+     		origin: sender
+   	}).then(ref => {
+    		 console.log('Added friendrequest with ID: ', ref.id);
      // res.send(2)//sent friend request
-   });
+   	});
+     })
    }
  });
 });
@@ -70,17 +57,14 @@ app.get('/confirmFriend', (req, res) => {
  var receiver = req.query.receiver.replace("@gmail.com","")
  var sender = req.query.sender.replace("@gmail.com","")
  console.log("receiver "+receiver+"\nsender "+sender);
- db.collection('user').doc(receiver).get().then(documentSnapshot => {
-
+ db.collection('user').doc(receiver).collection("friend").get().then(documentSnapshot => {
    if (documentSnapshot.exists) {
-
      documentSnapshot.forEach(doc => {
        var friend = doc.data()
-       friend.forEach(chi => {
-         console.log(chi);
-          if(friend.friend == sender) console.log("already friend");
-          res.send(1) //already friend
-       })
+          if(friend.friend == sender){
+           console.log("already friend");
+           res.sendStatus(1) //already friend
+        }
      });
 
      db.collection('user').doc(receiver).collection("friend").add({
@@ -88,10 +72,7 @@ app.get('/confirmFriend', (req, res) => {
      }).then(ref => {
        console.log('Added friend with ID: ', ref.id);
      });
-
-   }
- });
- db.collection('user').doc(sender).get().then(documentSnapshot => {
+    db.collection('user').doc(sender).get().then(documentSnapshot => {
 
    if (documentSnapshot.exists) {
      db.collection('user').doc(sender).collection("friend").add({
@@ -106,6 +87,9 @@ app.get('/confirmFriend', (req, res) => {
      });
    }
  });
+   }
+ });
+ 
 });
 
 app.get('/removeFriend', (req, res) => {
@@ -326,3 +310,4 @@ app.get('/startLive', async (req, res) => {
 server.listen(3000,()=>{
  console.log('Node app is running on port 3000')
 });
+
